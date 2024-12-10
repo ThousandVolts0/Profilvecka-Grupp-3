@@ -1,6 +1,7 @@
-using System;   
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
@@ -9,12 +10,14 @@ public class CameraMovement : MonoBehaviour
 
     public Transform player1Pos;
     public Transform player2Pos;
-    public Camera mainCamera;
 
-    private float horizontalDistance = 0;
-    private float verticalDistance = 0;
-    float maxDistance = 0;
-    private Vector3 posMidpoint = new Vector3(0,0,0);
+    public Camera mainCamera;
+    public Camera secondaryCamera;
+
+    public GameObject panel;
+    private Vector3 mainCamVelocity = Vector3.zero;
+    private Vector3 secondaryCamVelocity = Vector3.zero;
+
 
     void Start()
     {
@@ -22,18 +25,11 @@ public class CameraMovement : MonoBehaviour
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    void FixedUpdate()
     {
-        posMidpoint = (player1Pos.transform.position + player2Pos.transform.position) / 2; // Finds the average position between player1 and player2
-        mainCamera.transform.position = posMidpoint;
-
-        horizontalDistance = Mathf.Abs(player1Pos.transform.position.x - player2Pos.transform.position.x); // Gets the horizontal distance between player1 and player2
-        verticalDistance = Mathf.Abs(player1Pos.transform.position.y - player2Pos.transform.position.y) + 5; // Gets the horizontal distance between player1 and player2 with a slight offset
-
-        maxDistance = Mathf.Max(horizontalDistance, verticalDistance); // Checks which distance is the largest and which one to modify
-
-        mainCamera.orthographicSize = Mathf.Clamp(maxDistance / 2, 8, 50); // Makes sure the size stays within range
-
-        
+        mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, player1Pos.position, ref mainCamVelocity, 0.2f);
+        secondaryCamera.transform.position = Vector3.SmoothDamp(secondaryCamera.transform.position, player2Pos.position, ref secondaryCamVelocity, 0.2f);
     }
+
+   
 }
