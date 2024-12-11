@@ -24,7 +24,7 @@ public class Player2Movement : MonoBehaviour
         float moveInputH = Input.GetAxis("ArrowsOnlyH"); // Custom input manager definied under project settings.
         float moveInputV = Input.GetAxis("ArrowsOnlyV"); // Custom input manager definied under project settings.
 
-        Rigidbody.velocity = new Vector2(moveInputH * speed, moveInputV * speed);
+        Rigidbody.velocity = new Vector2(moveInputH * speed, moveInputV * speed * Random.Range(0.9f, 1.1f));
     }
 
 }
