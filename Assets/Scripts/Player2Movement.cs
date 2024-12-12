@@ -20,19 +20,65 @@ public class Player2Movement : MonoBehaviour
     public GameObject hitboxPrefab;
     string dir = "left";
 
+    AudioSource footstep1;
+    AudioSource footstep2;
+    AudioSource footstep3;
+    AudioSource footstep4;
+
+    public GameObject footstep1Obj;
+    public GameObject footstep2Obj;
+    public GameObject footstep3Obj;
+    public GameObject footstep4Obj;
+
     float moveInputH;
     float moveInputV;
+
+    float footstepTimer = 0f;
+    float footstepInterval = 0.5f;
 
     public float attackCooldown = 1f;
     private float attackTimer = 0f;
     private bool isAttacking = false;
+
+    AudioSource attackSound;
     void Start()
     {
         Rigidbody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         slashAnimatorR = slashR.GetComponent<Animator>();
         slashAnimatorL = slashL.GetComponent<Animator>();
+
+        footstep1 = footstep1Obj.GetComponent<AudioSource>();
+        footstep2 = footstep2Obj.GetComponent<AudioSource>();
+        footstep3 = footstep3Obj.GetComponent<AudioSource>();
+        footstep4 = footstep4Obj.GetComponent<AudioSource>();
+
+        attackSound = GetComponent<AudioSource>();
     }
+
+    private void playRandomFootstep()
+    {
+        int randomIndex = Random.Range(1, 4);
+        switch (randomIndex)
+        {
+            case 1:
+                footstep1.Play();
+                break;
+
+            case 2:
+                footstep2.Play();
+                break;
+
+            case 3:
+                footstep3.Play();
+                break;
+
+            case 4:
+                footstep4.Play();
+                break;
+        }
+    }
+    
 
     // Update is called once per frame
     private void FixedUpdate()
@@ -44,7 +90,6 @@ public class Player2Movement : MonoBehaviour
         {
             Rigidbody.velocity = new Vector2(moveInputH * speed, moveInputV * speed);
         }
-        
     }
 
     private IEnumerator showSlash()
@@ -53,6 +98,7 @@ public class Player2Movement : MonoBehaviour
         {
             yield return new WaitForSeconds(0.4f);
             slashL.SetActive(true);
+            attackSound.Play();
             slashAnimatorL.SetTrigger("doSlash");
             yield return new WaitForSeconds(slashAnimatorL.GetCurrentAnimatorStateInfo(0).length - 0.45f);
             slashL.SetActive(false);
@@ -62,6 +108,7 @@ public class Player2Movement : MonoBehaviour
         {
             yield return new WaitForSeconds(0.4f);
             slashR.SetActive(true);
+            attackSound.Play();
             slashAnimatorR.SetTrigger("doSlash");
             yield return new WaitForSeconds(slashAnimatorR.GetCurrentAnimatorStateInfo(0).length - 0.45f);
             slashR.SetActive(false);
@@ -73,17 +120,18 @@ public class Player2Movement : MonoBehaviour
     private IEnumerator playAnim(string name)
     {
         Rigidbody.velocity = new Vector2(0, 0);
+        
         animator.SetBool("isAttacking", true);
         animator.Play(name);
         StartCoroutine(showSlash());
 
-        Debug.Log("tes");
-
+        
         yield return new WaitForSeconds(animator.GetCurrentAnimatorStateInfo(0).length);
 
         checkState();
         attackTimer = attackCooldown;
         animator.SetBool("isAttacking", false);
+        yield return new WaitForSeconds(0.4f);
         isAttacking = false;
     }
 
@@ -116,6 +164,16 @@ public class Player2Movement : MonoBehaviour
             attackTimer -= Time.deltaTime;
         }
         
+        if (moveInputH != 0 || moveInputV != 0)
+        {
+            if (footstepTimer <= 0f)
+            {
+                playRandomFootstep();
+                footstepTimer = footstepInterval;
+            }
+        }
+
+        footstepTimer -= Time.deltaTime;
 
         if (animator.GetBool("isAttacking") == false)
         {
