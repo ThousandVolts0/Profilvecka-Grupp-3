@@ -5,6 +5,7 @@ using UnityEngine;
 public class SlashHitbox : MonoBehaviour
 {
     public int damage = 10;
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         // Check if the collided GameObject is on the right layer (e.g., layer 3)

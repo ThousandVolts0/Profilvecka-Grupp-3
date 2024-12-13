@@ -18,6 +18,8 @@ public class Player1Movement : MonoBehaviour
     float moveInputV;
     float gunSpeed = 5f;
 
+    public GameObject scoreText;
+
     public GameObject healthDisplay;
     public Camera mouseCam;
     public GameObject gunArm;

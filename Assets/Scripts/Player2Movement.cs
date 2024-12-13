@@ -18,6 +18,9 @@ public class Player2Movement : MonoBehaviour
     public GameObject slashL;
     private Animator slashAnimatorR;
     private Animator slashAnimatorL;
+
+    public GameObject scoreText;
+
     public GameObject hitboxPrefab;
     string dir = "left";
 
