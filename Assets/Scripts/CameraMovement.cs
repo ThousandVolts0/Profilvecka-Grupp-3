@@ -48,20 +48,50 @@ public class CameraMovement : MonoBehaviour
         float borderUpY = borderU.TransformPoint(Vector3.zero).y;
         float borderDownY = borderD.TransformPoint(Vector3.zero).y;
 
-        mainTargetPosX = Mathf.Clamp(player1Pos.position.x, (borderLeftX + cameraHalfWidth) + offsetX, (borderRightX - cameraHalfWidth) - offsetX);
-        mainTargetPosY = Mathf.Clamp(player1Pos.position.y, (borderDownY + cameraHalfHeight) + offsetY, (borderUpY - cameraHalfHeight) - offsetY);
+        if (player1Pos == null && player2Pos == null) // both are dead
+        {
+            return;
+        }
+        else if (player1Pos == null && player2Pos != null) // only player 2 is alive
+        {
+            secondaryTargetPosX = Mathf.Clamp(player2Pos.position.x, (borderLeftX + cameraHalfWidth) + offsetX, (borderRightX - cameraHalfWidth) - offsetX);
+            secondaryTargetPosY = Mathf.Clamp(player2Pos.position.y, (borderDownY + cameraHalfHeight) + offsetY, (borderUpY - cameraHalfHeight) - offsetY);
+            secondaryCamera.transform.position = new Vector3(secondaryTargetPosX, secondaryTargetPosY, secondaryCamera.transform.position.z);
+            secondaryTargetPos = new Vector3(secondaryTargetPosX, secondaryTargetPosY, secondaryCamera.transform.position.z);
+            secondaryCamera.transform.position = Vector3.SmoothDamp(secondaryCamera.transform.position, secondaryTargetPos, ref secondaryCamVelocity, 0.2f);
+        }
+        else if (player1Pos != null && player2Pos == null) // only player 1 is alive
+        {
+            mainTargetPosX = Mathf.Clamp(player1Pos.position.x, (borderLeftX + cameraHalfWidth) + offsetX, (borderRightX - cameraHalfWidth) - offsetX);
+            mainTargetPosY = Mathf.Clamp(player1Pos.position.y, (borderDownY + cameraHalfHeight) + offsetY, (borderUpY - cameraHalfHeight) - offsetY);
 
-        secondaryTargetPosX = Mathf.Clamp(player2Pos.position.x, (borderLeftX + cameraHalfWidth) + offsetX, (borderRightX - cameraHalfWidth) - offsetX);
-        secondaryTargetPosY = Mathf.Clamp(player2Pos.position.y, (borderDownY + cameraHalfHeight) + offsetY, (borderUpY - cameraHalfHeight) - offsetY);
+            mainCamera.transform.position = new Vector3(mainTargetPosX, mainTargetPosY, mainCamera.transform.position.z);
+            mainTargetPos = new Vector3(mainTargetPosX, mainTargetPosY, mainCamera.transform.position.z);
+            mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, mainTargetPos, ref mainCamVelocity, 0.2f);
+        }
+        else // none are dead
+        {
+            mainTargetPosX = Mathf.Clamp(player1Pos.position.x, (borderLeftX + cameraHalfWidth) + offsetX, (borderRightX - cameraHalfWidth) - offsetX);
+            mainTargetPosY = Mathf.Clamp(player1Pos.position.y, (borderDownY + cameraHalfHeight) + offsetY, (borderUpY - cameraHalfHeight) - offsetY);
 
-        mainCamera.transform.position = new Vector3(mainTargetPosX, mainTargetPosY, mainCamera.transform.position.z);
-        secondaryCamera.transform.position = new Vector3(secondaryTargetPosX, secondaryTargetPosY, secondaryCamera.transform.position.z);
+            secondaryTargetPosX = Mathf.Clamp(player2Pos.position.x, (borderLeftX + cameraHalfWidth) + offsetX, (borderRightX - cameraHalfWidth) - offsetX);
+            secondaryTargetPosY = Mathf.Clamp(player2Pos.position.y, (borderDownY + cameraHalfHeight) + offsetY, (borderUpY - cameraHalfHeight) - offsetY);
 
-        mainTargetPos = new Vector3(mainTargetPosX, mainTargetPosY, mainCamera.transform.position.z);
-        secondaryTargetPos = new Vector3(secondaryTargetPosX, secondaryTargetPosY, secondaryCamera.transform.position.z);
+            mainCamera.transform.position = new Vector3(mainTargetPosX, mainTargetPosY, mainCamera.transform.position.z);
+            secondaryCamera.transform.position = new Vector3(secondaryTargetPosX, secondaryTargetPosY, secondaryCamera.transform.position.z);
 
-        mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, mainTargetPos, ref mainCamVelocity, 0.2f);
-        secondaryCamera.transform.position = Vector3.SmoothDamp(secondaryCamera.transform.position, secondaryTargetPos, ref secondaryCamVelocity, 0.2f);
+            mainTargetPos = new Vector3(mainTargetPosX, mainTargetPosY, mainCamera.transform.position.z);
+            secondaryTargetPos = new Vector3(secondaryTargetPosX, secondaryTargetPosY, secondaryCamera.transform.position.z);
+
+            mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, mainTargetPos, ref mainCamVelocity, 0.2f);
+            secondaryCamera.transform.position = Vector3.SmoothDamp(secondaryCamera.transform.position, secondaryTargetPos, ref secondaryCamVelocity, 0.2f);
+        }
+
+
+        
+
+       
+       
     }
 
    

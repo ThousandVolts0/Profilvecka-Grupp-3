@@ -184,20 +184,44 @@ public class Enemy
     {
         if (!isDead && isTouching == false)
         {
-            Transform player1Pos = wavesSystem.player1Pos;
-            Transform player2Pos = wavesSystem.player2Pos;
-
-            float enemyDistanceP1 = Vector3.Distance(player1Pos.position, enemyPrefab.transform.position);
-            float enemyDistanceP2 = Vector3.Distance(player2Pos.position, enemyPrefab.transform.position);
-
-            Move(player1Pos, player2Pos, enemyDistanceP1, enemyDistanceP2);
+            Move();
         }
     }
 
-    private void Move(Transform p1Pos, Transform p2Pos, float distanceP1, float distanceP2)
+    private void Move()
     {
-            Vector3 targetPos = (distanceP1 < distanceP2) ? p1Pos.position : p2Pos.position;
-            Vector3 smoothPos = Vector3.MoveTowards(enemyPrefab.transform.position, targetPos, speed * Time.deltaTime);
-            enemyPrefab.transform.position = smoothPos;
+        Transform p1Pos = wavesSystem.player1Pos;
+        Transform p2Pos = wavesSystem.player2Pos;
+
+        // both are dead
+        if (p1Pos == null && p2Pos == null)
+        {
+            return; // no players available, stop moving
+        }
+
+        Vector3 targetPos;
+
+        // only p1 is alive
+        if (p1Pos != null && p2Pos == null)
+        {
+            targetPos = p1Pos.position;
+        }
+        // only p2 is alive
+        else if (p2Pos != null && p1Pos == null)
+        {
+            targetPos = p2Pos.position;
+        }
+        // both are alive
+        else
+        {
+            float distanceP1 = Vector3.Distance(p1Pos.position, enemyPrefab.transform.position);
+            float distanceP2 = Vector3.Distance(p2Pos.position, enemyPrefab.transform.position);
+            targetPos = (distanceP1 < distanceP2) ? p1Pos.position : p2Pos.position;
+        }
+
+        // move towards target
+        Vector3 smoothPos = Vector3.MoveTowards(enemyPrefab.transform.position, targetPos, speed * Time.deltaTime);
+        enemyPrefab.transform.position = smoothPos;
     }
+
 }

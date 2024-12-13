@@ -16,8 +16,14 @@ public class Player1Movement : MonoBehaviour
     private int health;
     float moveInputH;
     float moveInputV;
+    float gunSpeed = 5f;
 
     public GameObject healthDisplay;
+    public Camera mouseCam;
+    public GameObject bulletSmall;
+    public GameObject bulletBig;
+    public GameObject bulletLarge;
+    public GameObject gunArm;
     public GameObject healthText;
     private bool isTouchingEnemy;
     private bool isDead;
@@ -31,10 +37,37 @@ public class Player1Movement : MonoBehaviour
         buzzSound = GetComponent<AudioSource>();
     }
 
+    private void spawnBullet()
+    {
+        Vector3 mousePos = Input.mousePosition;
+        mousePos.z = mouseCam.transform.position.z;
+        Vector3 targetPos = mouseCam.ScreenToWorldPoint(mousePos);
+        GameObject activeBullet = Instantiate(bulletSmall, gunArm.transform.position, Quaternion.identity);
+
+        Debug.DrawLine(gunArm.transform.position, targetPos, Color.red, 2f);
+
+
+
+        Vector3 direction = (targetPos - gunArm.transform.position).normalized;
+
+        float rot_z = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        activeBullet.transform.rotation = Quaternion.Euler(0f, 0f, rot_z - 90);
+
+        Rigidbody2D bulletRb = activeBullet.GetComponent<Rigidbody2D>();
+        if (bulletRb != null)
+        {
+            bulletRb.velocity = direction * gunSpeed;
+        }
+    }
+
     private void Update()
     {
         bool isMoving = moveInputH != 0 || moveInputV != 0;
-        
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            spawnBullet();
+        }
 
         if (isMoving)
         {
@@ -47,11 +80,16 @@ public class Player1Movement : MonoBehaviour
             {
 
                 gameObject.GetComponent<SpriteRenderer>().flipX = true;
+                gunArm.GetComponent<SpriteRenderer>().flipX = true;
+                gunArm.transform.localPosition = new Vector2(-0.167f, gunArm.transform.localPosition.y);
 
             }
             else if (moveInputH > 0)
             {
                 gameObject.GetComponent<SpriteRenderer>().flipX = false;
+                gunArm.GetComponent<SpriteRenderer>().flipX = false;
+                gunArm.transform.localPosition = new Vector2(0.167f, gunArm.transform.localPosition.y);
+
             }
         }
         else
