@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -11,14 +12,20 @@ public class Player1Movement : MonoBehaviour
     [Range (0, 1000)] public float speed = 10f;
     private Rigidbody2D Rigidbody;
     private bool isGrounded;
-
+    private int maxHealth = 100;
+    private int health;
     float moveInputH;
     float moveInputV;
 
+    public GameObject healthDisplay;
+    public GameObject healthText;
+    private bool isTouchingEnemy;
+    private bool isDead;
 
     void Start()
     {
         Rigidbody = GetComponent<Rigidbody2D>();
+        health = maxHealth;
     }
 
     private void Update()
@@ -42,5 +49,50 @@ public class Player1Movement : MonoBehaviour
 
         Rigidbody.velocity = new Vector2(moveInputH * speed, moveInputV * speed);
     }
+
+    bool isCooldown = false;
+
+    public void takeDamage(int damage)
+    {
+        health -= damage;
+        TextMeshProUGUI text = healthText.GetComponent<TextMeshProUGUI>();
+        text.text = "Health: " + health.ToString();
+
+        if (health <= 0)
+        {
+            isDead = true;
+            Destroy(gameObject);
+        }
+    }
+
+    public IEnumerator checkDamage(int damage)
+    {
+        while (isTouchingEnemy && !isDead)
+        {
+            if (!isCooldown)
+            {
+                takeDamage(damage);
+                isCooldown = true;
+                yield return new WaitForSeconds(0.25f); // Cooldown delay
+                isCooldown = false;
+            }
+            yield return null; // Avoid blocking the main thread
+        }
+    }
+
+    public void OnTouchingEnemy(GameObject playerObj, int damage)
+    {
+        if (!isTouchingEnemy) // Start coroutine only when first touching
+        {
+            isTouchingEnemy = true;
+            StartCoroutine(checkDamage(damage)); // Start the coroutine
+        }
+    }
+
+    public void OnExitTouchingEnemy()
+    {
+        isTouchingEnemy = false;
+    }
+
 
 }

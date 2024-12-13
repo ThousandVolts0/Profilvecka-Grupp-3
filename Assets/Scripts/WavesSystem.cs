@@ -1,15 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using System.Threading;
-using static UnityEditor.Experimental.GraphView.GraphView;
-using static UnityEngine.RuleTile.TilingRuleOutput;
-using Transform = UnityEngine.Transform;
-using Unity.Loading;
 using TMPro;
-using UnityEngine.VFX;
-using UnityEditor.Rendering;
+using UnityEditor;
+
 public class WavesSystem : MonoBehaviour
 {
     // List of enemy types with their respective cost
@@ -32,6 +26,7 @@ public class WavesSystem : MonoBehaviour
     public Transform player2Pos;
 
     private bool hasSpawnedRound = false;
+    public EnemyBehaviour enemyScript;
 
     private void Start()
     {
@@ -56,9 +51,9 @@ public class WavesSystem : MonoBehaviour
             text.color = new Color(1f, 1f, 1f, alpha);
         }
     }
-    public IEnumerator GenerateWave(WaveConfig config) 
+
+    public IEnumerator GenerateWave(WaveConfig config)
     {
-        
         Debug.Log("Started wave " + currentWave);
 
         if (config == null) yield break;
@@ -73,12 +68,11 @@ public class WavesSystem : MonoBehaviour
             {
                 for (int j = 0; j < config.enemyCount[i]; j++)
                 {
-
                     yield return new WaitForSeconds(config.spawnInterval);
 
                     int spawnLocNumber = Random.Range(0, spawnLocations.Length);
                     Transform spawnLoc = spawnLocations[spawnLocNumber];
-                    
+
                     if (spawnLoc != null)
                     {
                         GameObject enemyObject = Instantiate(enemyTypes[i].enemyPrefab, spawnLoc.position, Quaternion.identity);
@@ -92,21 +86,17 @@ public class WavesSystem : MonoBehaviour
                         enemy.damage = enemyTypes[i].damage;
                         enemy.resetHealth();
 
-                        EnemyBehaviour enemyScript = enemyObject.AddComponent<EnemyBehaviour>();
+                        enemyScript = enemyObject.AddComponent<EnemyBehaviour>();
                         enemyScript.intializeEnemy(enemy);
-                        
-                        
                     }
                     else
                     {
                         Debug.LogWarning("Spawn location of " + spawnLoc + " does not exist.");
                     }
-                    
                 }
             }
         }
 
-        Debug.Log("now");
         hasSpawnedRound = true;
     }
 
@@ -114,7 +104,7 @@ public class WavesSystem : MonoBehaviour
     {
         if (activeEnemies.Count == 0)
         {
-            if (hasSpawnedRound == true)
+            if (hasSpawnedRound)
             {
                 currentWave++;
                 if (currentWave < waveConfigs.Count)
@@ -130,11 +120,10 @@ public class WavesSystem : MonoBehaviour
             {
                 Debug.LogWarning("Current wave hasn't finished spawning yet!");
             }
-            
         }
-
     }
 }
+
 [System.Serializable]
 public class WaveConfig
 {
@@ -159,7 +148,8 @@ public class Enemy
     public int maxHealth = 100;
     public float speed = 3f;
     private int currentHealth;
-    private Vector3 velocity = Vector3.zero;
+    private bool isDead = false;
+    public bool isTouching = false;
 
     public void initialize(WavesSystem system)
     {
@@ -176,17 +166,23 @@ public class Enemy
     {
         currentHealth -= damage;
 
-        if (currentHealth <= 0)
+        if (currentHealth <= 0 && !isDead)
         {
-            wavesSystem.activeEnemies.Remove(enemyPrefab);
-            GameObject.Destroy(enemyPrefab);
-            wavesSystem.CheckWaveCompletion();
+            die();
         }
+    }
+
+    public void die()
+    {
+        isDead = true;
+        GameObject.Destroy(enemyPrefab);
+        wavesSystem.activeEnemies.Remove(enemyPrefab);
+        wavesSystem.CheckWaveCompletion();
     }
 
     public void Update()
     {
-        if (wavesSystem != null)
+        if (!isDead && isTouching == false)
         {
             Transform player1Pos = wavesSystem.player1Pos;
             Transform player2Pos = wavesSystem.player2Pos;
@@ -200,13 +196,8 @@ public class Enemy
 
     private void Move(Transform p1Pos, Transform p2Pos, float distanceP1, float distanceP2)
     {
-
-        Vector3 targetPos = (distanceP1 < distanceP2) ? p1Pos.position : p2Pos.position;
-
-        Vector3 smoothPos = Vector3.MoveTowards(enemyPrefab.transform.position, targetPos, speed);
-
-        Vector3 direction = (smoothPos - enemyPrefab.transform.position).normalized;
-        enemyPrefab.transform.position += direction * speed * Time.deltaTime;
+            Vector3 targetPos = (distanceP1 < distanceP2) ? p1Pos.position : p2Pos.position;
+            Vector3 smoothPos = Vector3.MoveTowards(enemyPrefab.transform.position, targetPos, speed * Time.deltaTime);
+            enemyPrefab.transform.position = smoothPos;
     }
-
 }

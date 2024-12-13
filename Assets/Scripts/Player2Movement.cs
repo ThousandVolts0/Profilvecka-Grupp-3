@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -19,6 +20,14 @@ public class Player2Movement : MonoBehaviour
     private Animator slashAnimatorL;
     public GameObject hitboxPrefab;
     string dir = "left";
+
+    private int maxHealth = 100;
+    private int health;
+
+    public GameObject healthDisplay;
+    public GameObject healthText;
+    private bool isTouchingEnemy;
+    private bool isDead;
 
     AudioSource footstep1;
     AudioSource footstep2;
@@ -54,6 +63,7 @@ public class Player2Movement : MonoBehaviour
         footstep4 = footstep4Obj.GetComponent<AudioSource>();
 
         attackSound = GetComponent<AudioSource>();
+        health = maxHealth;
     }
 
     private void playRandomFootstep()
@@ -86,10 +96,7 @@ public class Player2Movement : MonoBehaviour
         moveInputH = Input.GetAxis("ArrowsOnlyH"); // Custom input manager definied under project settings.
         moveInputV = Input.GetAxis("ArrowsOnlyV"); // Custom input manager definied under project settings.
 
-        if (!isAttacking)
-        {
-            Rigidbody.velocity = new Vector2(moveInputH * speed, moveInputV * speed);
-        }
+        Rigidbody.velocity = new Vector2(moveInputH * speed, moveInputV * speed);
     }
 
     private IEnumerator showSlash()
@@ -119,7 +126,6 @@ public class Player2Movement : MonoBehaviour
 
     private IEnumerator playAnim(string name)
     {
-        Rigidbody.velocity = new Vector2(0, 0);
         
         animator.SetBool("isAttacking", true);
         animator.Play(name);
@@ -135,6 +141,24 @@ public class Player2Movement : MonoBehaviour
         isAttacking = false;
     }
 
+    private IEnumerator spawnHitbox()
+    {
+        Vector2 pos = new Vector2(0, 0);
+        yield return new WaitForSeconds(0.25f);
+        if (dir == "right")
+        {
+            pos = new Vector2(slashR.transform.position.x + 1f, slashR.transform.position.y);
+
+        }
+        else if (dir == "left")
+        {
+            pos = new Vector2(slashL.transform.position.x - 1f, slashL.transform.position.y);
+        }
+        GameObject obj = Instantiate(hitboxPrefab, pos, Quaternion.identity);
+        yield return new WaitForSeconds(0.1f);
+        Destroy(obj);
+    }
+
     private void Update()
     {
         if (attackTimer <= 0f && isAttacking == false)
@@ -144,16 +168,8 @@ public class Player2Movement : MonoBehaviour
                 if (character == 'ä')
                 {
                     StartCoroutine(playAnim("MantisAttack"));
-                    Vector2 pos = new Vector2(0, 0);
-                    if (dir == "right")
-                    {
-                        pos = new Vector2(transform.position.x + 1, transform.position.y);
-                    }
-                    else if (dir == "left")
-                    {
-                        pos = new Vector2(transform.position.x - 1, transform.position.y);
-                    }
-                    GameObject obj = Instantiate(hitboxPrefab, pos, Quaternion.identity);
+                    
+                    StartCoroutine(spawnHitbox());
                     isAttacking = true;
 
                 }
@@ -204,5 +220,53 @@ public class Player2Movement : MonoBehaviour
             }
         
     }
+
+    bool isCooldown = false;
+
+    public void takeDamage(int damage)
+    {
+        health -= damage;
+        TextMeshProUGUI text = healthText.GetComponent<TextMeshProUGUI>();
+        text.text = "Health: " + health.ToString();
+
+        if (health <= 0)
+        {
+            isDead = true;
+            Destroy(gameObject);
+        }
+    }
+
+    public IEnumerator checkDamage(int damage)
+    {
+        while (isTouchingEnemy && !isDead)
+        {
+            if (!isCooldown)
+            {
+                takeDamage(damage);
+                isCooldown = true;
+                yield return new WaitForSeconds(0.25f); // Cooldown delay
+                isCooldown = false;
+            }
+            yield return null; // Avoid blocking the main thread
+        }
+    }
+
+    public void OnTouchingEnemy(GameObject playerObj, int damage)
+    {
+        if (!isTouchingEnemy) // Start coroutine only when first touching
+        {
+            isTouchingEnemy = true;
+            StartCoroutine(checkDamage(damage)); // Start the coroutine
+        }
+    }
+
+    public void OnExitTouchingEnemy()
+    {
+        isTouchingEnemy = false;
+    }
+
+
+
+
 
 }
