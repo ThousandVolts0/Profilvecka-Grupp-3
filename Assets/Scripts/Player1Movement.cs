@@ -21,24 +21,49 @@ public class Player1Movement : MonoBehaviour
     public GameObject healthText;
     private bool isTouchingEnemy;
     private bool isDead;
+    private AudioSource buzzSound;
+
 
     void Start()
     {
         Rigidbody = GetComponent<Rigidbody2D>();
         health = maxHealth;
+        buzzSound = GetComponent<AudioSource>();
     }
 
     private void Update()
     {
-        if (moveInputH < 0)
-        {
-            gameObject.GetComponent<SpriteRenderer>().flipX = true;
+        bool isMoving = moveInputH != 0 || moveInputV != 0;
+        
 
-        }
-        else if (moveInputH > 0)
+        if (isMoving)
         {
-            gameObject.GetComponent<SpriteRenderer>().flipX = false;
+            if (!buzzSound.isPlaying)
+            {
+                buzzSound.Play();
+            }
+
+            if (moveInputH < 0)
+            {
+
+                gameObject.GetComponent<SpriteRenderer>().flipX = true;
+
+            }
+            else if (moveInputH > 0)
+            {
+                gameObject.GetComponent<SpriteRenderer>().flipX = false;
+            }
         }
+        else
+        {
+            if (buzzSound.isPlaying)
+            {
+                {
+                    buzzSound.Stop();
+                }
+            }
+        }
+
     }
 
     // Update is called once per frame
